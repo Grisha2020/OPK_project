@@ -29,7 +29,7 @@ def create_tank(x, y) -> Tank:
     return tank
 
 
-def rotate(tank: Tank, direction: str):  # Скорей всего косяк в поворотах, хотя может быть в изменении скорости
+def rotate(tank: Tank, direction: str):  # Скорей всего косяк в поворотах
     if tank.rotate >= 2 * math.pi:
         tank.rotate -= 2 * math.pi
     elif tank.rotate <= -2 * math.pi:
