@@ -10,24 +10,29 @@ class Point:
     y = None
 
 
-class Tank:
-    rotate = 0
-    sizes: Point = None
-    speed: Point = None
+class Rectangle:
     centre: Point = None
+    height = None
+    width = None
+    rotate = None
     point_1: Point = None
     point_2: Point = None
     point_3: Point = None
     point_4: Point = None
 
 
+class Tank:
+    rotate = 0
+    sizes: Point = None
+    speed: Point = None
+    centre: Point = None
+    rectangle: Rectangle = None
+
+
 class Gun:
     sizes: Point = None
     tank: Tank = None
-    point_near_1: Point = None
-    point_near_2: Point = None
-    point_further_3: Point = None
-    point_further_4: Point = None
+    rectangle: Rectangle = None
 
 
 class Bullet:
@@ -35,10 +40,7 @@ class Bullet:
     centre: Point = None
     rotate = 0
     speed: Point = None
-    point_1: Point = None
-    point_2: Point = None
-    point_3: Point = None
-    point_4: Point = None
+    rectangle: Rectangle = None
 
 
 def create_point(x: int, y: int) -> Point:
@@ -47,164 +49,149 @@ def create_point(x: int, y: int) -> Point:
     return point
 
 
+def create_rectangle(centre: Point, height: int, width: int, rotate_r) -> Rectangle:
+    rectangle = Rectangle()
+    rectangle.centre = centre
+    rectangle.height = height
+    rectangle.width = width
+    rectangle.rotate = rotate_r
+    rectangle.point_1 = create_point(0, 0)
+    rectangle.point_2 = create_point(0, 0)
+    rectangle.point_3 = create_point(0, 0)
+    rectangle.point_4 = create_point(0, 0)
+    points_rectangle(rectangle)
+    return rectangle
+
+
+def points_rectangle(rectangle: Rectangle) -> None:
+    lenght = math.hypot(rectangle.height, rectangle.width)
+    start_rotate = math.atan(rectangle.height / rectangle.width)
+    pi = math.pi
+    rectangle.point_1.x, rectangle.point_1.y = lenght * math.cos(rectangle.rotate + start_rotate), lenght * math.sin(
+        rectangle.rotate + start_rotate)
+    rectangle.point_2.x, rectangle.point_2.y = lenght * math.cos(rectangle.rotate - start_rotate), lenght * math.sin(
+        rectangle.rotate - start_rotate)
+    rectangle.point_3.x, rectangle.point_3.y = lenght * math.cos(
+        rectangle.rotate + start_rotate + pi), lenght * math.sin(rectangle.rotate + start_rotate + pi)
+    rectangle.point_4.x, rectangle.point_4.y = lenght * math.cos(
+        rectangle.rotate - start_rotate + pi), lenght * math.sin(rectangle.rotate - start_rotate + pi)
+
+
 def create_tank(x: int, y: int, height: int, width: int, speed_x: int, speed_y: int) -> Tank:
     tank_clone = Tank()
     tank_clone.centre = create_point(x, y)
     tank_clone.sizes = create_point(width, height)
     tank_clone.speed = create_point(speed_x, speed_y)
-    tank_clone.point_1 = create_point(0, 0)
-    tank_clone.point_2 = create_point(0, 0)
-    tank_clone.point_3 = create_point(0, 0)
-    tank_clone.point_4 = create_point(0, 0)
-    points_tank(tank_clone)
+    tank_clone.rectangle = create_rectangle(tank_clone.centre, height, width, tank_clone.rotate)
     return tank_clone
 
 
-def create_gun(height: int, width: int, tank_cl: Tank) -> Gun:
+def create_gun(height: int, width: int, tank_tower: Tank) -> Gun:
+    pi = math.pi
     gun_clone = Gun()
     gun_clone.sizes = create_point(width, height)
-    gun_clone.tank = tank_cl
-    gun_clone.point_near_1 = create_point(0, 0)
-    gun_clone.point_near_2 = create_point(0, 0)
-    gun_clone.point_further_3 = create_point(0, 0)
-    gun_clone.point_further_4 = create_point(0, 0)
-    points_gun(gun_clone)
+    gun_clone.tank = tank_tower
+    re_centre = create_point(0, 0)
+    re_centre.x, re_centre.y = gun_clone.tank.centre.x + (gun_clone.tank.sizes.y + gun_clone.sizes.x) * math.cos(
+        gun_clone.tank.rotate - pi / 2), gun_clone.tank.centre.y + (
+                                       gun_clone.tank.sizes.y + gun_clone.sizes.x) * math.sin(
+        gun_clone.tank.rotate - pi / 2)
+    gun_clone.rectangle = create_rectangle(re_centre, width, height, gun_clone.tank.rotate)
     return gun_clone
 
 
 def create_bullet(gun_cl: Gun, speed: int) -> Bullet:
+    pi = math.pi
     bullet_clone = Bullet()
     bullet_clone.gun = gun_cl
     bullet_clone.rotate = gun_cl.tank.rotate
     # at the beginning, the center of the bullet should be at the end of the gun
     bullet_clone.centre = create_point(0, 0)
-    bullet_clone.centre.x, bullet_clone.centre.y = (gun.tank.centre.x + gun_cl.tank.sizes.y + gun_cl.sizes.y +
-                                                    gun_cl.sizes.x) * math.cos(gun_cl.tank.rotate - math.pi / 2),\
-                                                   (gun.tank.centre.y + gun_cl.tank.sizes.y + gun_cl.sizes.y +
-                                                    gun_cl.sizes.x) * math.sin(gun_cl.tank.rotate - math.pi / 2)
+    bullet_clone.centre.x, bullet_clone.centre.y = bullet_clone.gun.rectangle.centre.x + math.hypot(
+        bullet_clone.gun.sizes.y, bullet_clone.gun.sizes.x) * math.cos(
+        bullet_clone.gun.rectangle.rotate - pi / 2), bullet_clone.gun.rectangle.centre.y + math.hypot(
+        bullet_clone.gun.sizes.y, bullet_clone.gun.sizes.x) * math.sin(bullet_clone.gun.rectangle.rotate - pi / 2)
     bullet_clone.speed = create_point(0, 0)
-    bullet_clone.speed.x, bullet_clone.speed.y = speed * math.cos(gun_cl.tank.rotate - math.pi / 2), speed * math.sin(
-        gun_cl.tank.rotate - math.pi / 2)
-    bullet_clone.point_1 = create_point(0, 0)
-    bullet_clone.point_2 = create_point(0, 0)
-    bullet_clone.point_3 = create_point(0, 0)
-    bullet_clone.point_4 = create_point(0, 0)
-    points_bullet(bullet_clone)
+    bullet_clone.speed.x, bullet_clone.speed.y = speed * math.cos(
+        bullet_clone.gun.tank.rotate - pi / 2), speed * math.sin(bullet_clone.gun.tank.rotate - pi / 2)
+    bullet_clone.rectangle = create_rectangle(bullet_clone.centre, bullet_clone.gun.sizes.y, bullet_clone.gun.sizes.y,
+                                              bullet_clone.rotate)
     return bullet_clone
 
 
-def points_tank(tank_clone: Tank) -> None:
-    lenght = math.hypot(tank_clone.sizes.x, tank_clone.sizes.y)
-    start_rotate = math.atan(tank_clone.sizes.x / tank_clone.sizes.y)
-    tank_clone.point_1.x, tank_clone.point_1.y = lenght * math.cos(tank_clone.rotate + start_rotate), lenght * math.sin(
-        tank_clone.rotate + start_rotate)
-    tank_clone.point_2.x, tank_clone.point_2.y = lenght * math.cos(tank_clone.rotate - start_rotate), lenght * math.sin(
-        tank_clone.rotate - start_rotate)
-    tank_clone.point_3.x, tank_clone.point_3.y = lenght * math.cos(
-        tank_clone.rotate + start_rotate + math.pi), lenght * math.sin(tank_clone.rotate + start_rotate + math.pi)
-    tank_clone.point_4.x, tank_clone.point_4.y = lenght * math.cos(
-        tank_clone.rotate - start_rotate + math.pi), lenght * math.sin(tank_clone.rotate - start_rotate + math.pi)
+def gun_change(gun_clone: Gun) -> None:
+    pi = math.pi
+    gun_clone.rectangle.rotate = gun_clone.tank.rotate
+    gun_clone.rectangle.centre.x, gun_clone.rectangle.centre.y = \
+        gun_clone.tank.centre.x + (gun_clone.tank.sizes.y + gun_clone.sizes.x) * \
+        math.cos(gun_clone.tank.rotate - pi / 2), gun_clone.tank.centre.y + \
+        (gun_clone.tank.sizes.y + gun_clone.sizes.x) * math.sin(gun_clone.tank.rotate - pi / 2)
+    points_rectangle(gun_clone.rectangle)
 
 
-def points_gun(gun_clone: Gun) -> None:
-    lenght_near_points = math.hypot(gun_clone.sizes.y, gun_clone.tank.sizes.x)
-    lenght_further_points = math.hypot(gun_clone.sizes.y, gun_clone.sizes.x + gun_clone.tank.sizes.x)
-    start_rotate_near = math.atan(gun_clone.sizes.y / gun_clone.tank.sizes.x)
-    start_rotate_further = math.atan(gun_clone.sizes.y / (gun_clone.sizes.x + gun_clone.tank.sizes.x))
-    gun_clone.point_near_1.x, gun_clone.point_near_1.y = lenght_near_points * math.cos(
-        gun_clone.tank.rotate + start_rotate_near - math.pi / 2), lenght_near_points * math.sin(
-        gun_clone.tank.rotate + start_rotate_near - math.pi / 2)
-    gun_clone.point_near_2.x, gun_clone.point_near_2.y = lenght_near_points * math.cos(
-        gun_clone.tank.rotate - start_rotate_near - math.pi / 2), lenght_near_points * math.sin(
-        gun_clone.tank.rotate - start_rotate_near - math.pi / 2)
-    gun_clone.point_further_3.x, gun_clone.point_further_3.y = lenght_further_points * math.cos(
-        gun_clone.tank.rotate - start_rotate_further - math.pi / 2), lenght_further_points * math.sin(
-        gun_clone.tank.rotate - start_rotate_further - math.pi / 2)
-    gun_clone.point_further_4.x, gun_clone.point_further_4.y = lenght_further_points * math.cos(
-        gun_clone.tank.rotate + start_rotate_further - math.pi / 2), lenght_further_points * math.sin(
-        gun_clone.tank.rotate + start_rotate_further - math.pi / 2)
+def bullet_change(bullet_clone: Bullet) -> None:
+    pi = math.pi
+    bullet_clone.centre.x, bullet_clone.centre.y = bullet_clone.gun.rectangle.centre.x + math.hypot(
+        bullet_clone.gun.sizes.y, bullet_clone.gun.sizes.x) * math.cos(
+        bullet_clone.gun.rectangle.rotate - pi / 2), bullet_clone.gun.rectangle.centre.y + math.hypot(
+        bullet_clone.gun.sizes.y, bullet_clone.gun.sizes.x) * math.sin(bullet_clone.gun.rectangle.rotate - pi / 2)
+    bullet_clone.speed.x, bullet_clone.speed.y = BULLET_SPEED * math.cos(
+        bullet_clone.gun.tank.rotate - pi / 2), BULLET_SPEED * math.sin(bullet_clone.gun.tank.rotate - pi / 2)
+    bullet_clone.rotate = bullet_clone.gun.tank.rotate
+    bullet_clone.rectangle.rotate = bullet_clone.rotate
 
 
-def points_bullet(bullet_clone: Bullet) -> None:
-    lenght = math.hypot(bullet_clone.gun.sizes.y, bullet_clone.gun.sizes.x)
-    start_rotate = math.pi / 4
-    bullet_clone.point_1.x, bullet_clone.point_1.y = lenght * math.cos(
-        bullet_clone.rotate + start_rotate), lenght * math.sin(bullet_clone.rotate + start_rotate)
-    bullet_clone.point_2.x, bullet_clone.point_2.y = lenght * math.cos(
-        bullet_clone.rotate + start_rotate), lenght * math.sin(bullet_clone.rotate - start_rotate)
-    bullet_clone.point_3.x, bullet_clone.point_3.y = lenght * math.cos(
-        bullet_clone.rotate + start_rotate + math.pi), lenght * math.sin(bullet_clone.rotate + start_rotate + math.pi)
-    bullet_clone.point_4.x, bullet_clone.point_4.y = lenght * math.cos(
-        bullet_clone.rotate + start_rotate + math.pi), lenght * math.sin(bullet_clone.rotate - start_rotate + math.pi)
-
-
-def rotate(tank_clone: Tank, direction: str) -> None:
-    if tank_clone.rotate >= 2 * math.pi:
-        tank_clone.rotate -= 2 * math.pi
-    elif tank_clone.rotate <= -2 * math.pi:
-        tank_clone.rotate += 2 * math.pi
+def rotate_tank(tank_clone: Tank, direction: str) -> None:
+    pi = math.pi
+    if tank_clone.rotate >= 2 * pi:
+        tank_clone.rotate -= 2 * pi
+        tank_clone.rectangle.rotate -= 2 * pi
+    elif tank_clone.rotate <= -2 * pi:
+        tank_clone.rotate += 2 * pi
+        tank_clone.rectangle.rotate += 2 * pi
+    rotate_change = 5
     if direction == "right":
-        tank_clone.rotate += 5 * math.pi / 180
-        points_tank(tank_clone)
+        tank_clone.rotate += rotate_change * pi / 180
+        tank_clone.rectangle.rotate += rotate_change * pi / 180
+        points_rectangle(tank_clone.rectangle)
     if direction == "left":
-        tank_clone.rotate -= 5 * math.pi / 180
-        points_tank(tank_clone)
+        tank_clone.rotate -= rotate_change * pi / 180
+        tank_clone.rectangle.rotate -= rotate_change * pi / 180
+        points_rectangle(tank_clone.rectangle)
 
 
 def speed_change(dspeed: int, tank_clone: Tank):
     speed = math.hypot(abs(tank_clone.speed.x), abs(tank_clone.speed.y))
-    # if tank.speed.x >
-    tank_clone.speed.x = (speed + TANK_ACCELERATION * dspeed) * math.cos(tank_clone.rotate - math.pi / 2)
-    tank_clone.speed.y = (speed + TANK_ACCELERATION * dspeed) * math.sin(tank_clone.rotate - math.pi / 2)
-    max_speed = 500
+    pi = math.pi
+    tank_clone.speed.x = (speed + TANK_ACCELERATION * dspeed) * math.cos(tank_clone.rotate - pi / 2)
+    tank_clone.speed.y = (speed + TANK_ACCELERATION * dspeed) * math.sin(tank_clone.rotate - pi / 2)
+    max_speed = 400
+    acceleration = 10
     if abs(tank_clone.speed.x) > max_speed:
         while abs(tank_clone.speed.x) > max_speed:
             if tank_clone.speed.x >= 0:
-                tank_clone.speed.x -= 10
+                tank_clone.speed.x -= acceleration
             else:
-                tank_clone.speed.x += 10
+                tank_clone.speed.x += acceleration
     if abs(tank_clone.speed.y) > max_speed:
         while abs(tank_clone.speed.y) > max_speed:
             if tank_clone.speed.y >= 0:
-                tank_clone.speed.y -= 10
+                tank_clone.speed.y -= acceleration
             else:
-                tank_clone.speed.y += 10
+                tank_clone.speed.y += acceleration
 
 
-def draw_a_tank(tank_clone, color) -> Tank:
-    tank_return = canvas.create_polygon(tank_clone.centre.x + tank_clone.point_1.x,
-                                        tank_clone.centre.y + tank_clone.point_1.y,
-                                        tank_clone.centre.x + tank_clone.point_2.x,
-                                        tank_clone.centre.y + tank_clone.point_2.y,
-                                        tank_clone.centre.x + tank_clone.point_3.x,
-                                        tank_clone.centre.y + tank_clone.point_3.y,
-                                        tank_clone.centre.x + tank_clone.point_4.x,
-                                        tank_clone.centre.y + tank_clone.point_4.y, fill=color, outline="")
-    return tank_return
-
-
-def draw_a_gun(gun_clone: Gun, color) -> Gun:
-    gun_return = canvas.create_polygon(gun_clone.tank.centre.x + gun_clone.point_near_1.x,
-                                       gun_clone.tank.centre.y + gun_clone.point_near_1.y,
-                                       gun_clone.tank.centre.x + gun_clone.point_near_2.x,
-                                       gun_clone.tank.centre.y + gun_clone.point_near_2.y,
-                                       gun_clone.tank.centre.x + gun_clone.point_further_3.x,
-                                       gun_clone.tank.centre.y + gun_clone.point_further_3.y,
-                                       gun_clone.tank.centre.x + gun_clone.point_further_4.x,
-                                       gun_clone.tank.centre.y + gun_clone.point_further_4.y, fill=color, outline="")
-    return gun_return
-
-
-def draw_a_bullet(bullet_clone: Bullet, color) -> Bullet:
-    bullet_return = canvas.create_polygon(bullet_clone.centre.x + bullet_clone.point_1.x,
-                                          bullet_clone.centre.y + bullet_clone.point_1.y,
-                                          bullet_clone.centre.x + bullet_clone.point_2.x,
-                                          bullet_clone.centre.y + bullet_clone.point_2.y,
-                                          bullet_clone.centre.x + bullet_clone.point_3.x,
-                                          bullet_clone.centre.y + bullet_clone.point_3.y,
-                                          bullet_clone.centre.x + bullet_clone.point_4.x,
-                                          bullet_clone.centre.y + bullet_clone.point_4.y, fill=color, outline="")
-    return bullet_return
+def draw_a_object(object_1, color) -> Tank:
+    object_return = canvas.create_polygon(object_1.rectangle.centre.x + object_1.rectangle.point_1.x,
+                                          object_1.rectangle.centre.y + object_1.rectangle.point_1.y,
+                                          object_1.rectangle.centre.x + object_1.rectangle.point_2.x,
+                                          object_1.rectangle.centre.y + object_1.rectangle.point_2.y,
+                                          object_1.rectangle.centre.x + object_1.rectangle.point_3.x,
+                                          object_1.rectangle.centre.y + object_1.rectangle.point_3.y,
+                                          object_1.rectangle.centre.x + object_1.rectangle.point_4.x,
+                                          object_1.rectangle.centre.y + object_1.rectangle.point_4.y, fill=color,
+                                          outline="")
+    return object_return
 
 
 # def main():
@@ -217,11 +204,11 @@ TITLE_Y = 20
 
 FIELD_PADDING = 30
 BORDER_WIDTH = 10
-TANK_HEIGHT = 20
-TANK_WIDTH = 40
+TANK_WIDTH = 20
+TANK_HEIGHT = 40
 TOWER_TANK_SIZE = 16
 GUN_HEIGHT = 6
-GUN_WIDTH = 40
+GUN_WIDTH = 20
 
 FIELD_X = FIELD_PADDING
 FIELD_Y = FIELD_PADDING + TITLE_Y
@@ -236,7 +223,7 @@ COLOR_FIELD = "#00FF00"
 COLOR_TANK = "red"
 COLOR_TOWER_TANK = "#0000FF"
 COLOR_GUN = "blue"
-COLOR_BULLET = "#000000"
+COLOR_BULLET = "black"
 
 root.title("tanks")
 root.resizable(False, False)
@@ -261,10 +248,11 @@ tower_tank = create_tank(FIELD_X + FIELD_WIDTH / 2, FIELD_Y + FIELD_HEIGHT / 2, 
 gun = create_gun(GUN_HEIGHT, GUN_WIDTH, tower_tank)
 bullet = create_bullet(gun, BULLET_SPEED)
 
-tank_1 = draw_a_tank(tank, COLOR_TANK)
-tower_tank_1 = draw_a_tank(tower_tank, COLOR_TOWER_TANK)
-gun_1 = draw_a_gun(gun, COLOR_GUN)
-bullet_1 = draw_a_bullet(bullet, COLOR_BULLET)
+tank_1 = draw_a_object(tank, COLOR_TANK)
+tower_tank_1 = draw_a_object(tower_tank, COLOR_TOWER_TANK)
+gun_1 = draw_a_object(gun, COLOR_GUN)
+bullet_1 = draw_a_object(bullet, COLOR_BULLET)
+flag_for_bullet = True
 
 last_time = None
 
@@ -274,52 +262,22 @@ def process_key(event):
 
     # event.char - regular symbols
     # event.keysym - special keys
-    if event.keysym == "Up" or event.char == "w":
+    if event.keysym == "Up" or event.char == "w" or event.char == "ц":
         dspeed += 1
-    elif event.keysym == "Down" or event.char == "s":
+    elif event.keysym == "Down" or event.char == "s" or event.char == "ы":
         dspeed -= 1
-    elif event.keysym == "Left" or event.char == "a":
-        rotate(tank, "left")
-        rotate(tower_tank, "left")
-        points_gun(gun)
-    elif event.keysym == "Right" or event.char == "d":
-        rotate(tank, "right")
-        rotate(tower_tank, "right")
-        points_gun(gun)
+    elif event.keysym == "Left" or event.char == "a" or event.char == "ф":
+        rotate_tank(tank, "left")
+        rotate_tank(tower_tank, "left")
+        gun_change(gun)
+    elif event.keysym == "Right" or event.char == "d" or event.char == "в":
+        rotate_tank(tank, "right")
+        rotate_tank(tower_tank, "right")
+        gun_change(gun)
     elif event.keysym == "Escape":
         root.quit()
         return
     speed_change(dspeed, tank)
-    # update_physics()
-
-
-# def press_w(event):
-#     ds = 1
-#     speed_change(ds, tank)
-#
-#
-# def press_s(event):
-#     ds = -1
-#     speed_change(ds, tank)
-#
-#
-# def press_d(event):
-#     ds = 0
-#     rotate(tank, "right")
-#     rotate(tower_tank, "right")
-#     speed_change(ds, tank)
-#
-#
-# def press_a(event):
-#     ds = 0
-#     rotate(tank, "left")
-#     rotate(tower_tank, "left")
-#     speed_change(ds, tank)
-#
-#
-# def press_esc(event):
-#     root.quit()
-#     return
 
 
 def process_mouse(event):
@@ -328,79 +286,132 @@ def process_mouse(event):
         # Filter out non-canvas clicks.
         tank.centre.x, tower_tank.centre.x = event.x, event.x
         tank.centre.y, tower_tank.centre.y = event.y, event.y
-        points_gun(gun)
+        gun_change(gun)
         canvas.delete(tank_1)
         canvas.delete(tower_tank_1)
         canvas.delete(gun_1)
-        tank_1 = draw_a_tank(tank, COLOR_TANK)
-        tower_tank_1 = draw_a_tank(tower_tank, COLOR_TOWER_TANK)
-        gun_1 = draw_a_gun(gun, COLOR_GUN)
+        tank_1 = draw_a_object(tank, COLOR_TANK)
+        tower_tank_1 = draw_a_object(tower_tank, COLOR_TOWER_TANK)
+        gun_1 = draw_a_object(gun, COLOR_GUN)
 
 
 def process_shot(event):
-    global bullet_1
+    global bullet_1, bullet, flag_for_bullet
     canvas.delete(bullet_1)
-    time.sleep(1)
-    bullet_1 = draw_a_bullet(bullet, COLOR_BULLET)
-    # a = canvas.create_rectangle(50, 50, 100, 100, fill='red')
-    # canvas.create_line(10, 10, 190, 50)
+    bullet_change(bullet)
+    bullet_1 = draw_a_object(bullet, COLOR_BULLET)
+    flag_for_bullet = True
+
+ 
+def process_rotate_tower(event):  # Криво работает поворот башни
+    global tower_tank_1, gun_1
+    if event.y - tower_tank.centre.y != 0:
+        angle = math.atan((event.x - tower_tank.centre.x) / (event.y - tower_tank.centre.y))
+    else:
+        angle = 0
+    pi = math.pi
+    angle_change = 2
+    if tower_tank.rotate >= 2 * pi:
+        tower_tank.rotate -= 2 * pi
+    if tower_tank.rotate <= -2 * pi:
+        tower_tank.rotate += 2 * pi
+    if gun.rectangle.rotate >= 2 * pi:
+        gun.rectangle.rotate -= 2 * pi
+    if gun.rectangle.rotate <= -2 * pi:
+        gun.rectangle.rotate += 2 * pi
+    if tower_tank.rotate <= angle:
+        tower_tank.rotate -= angle_change * pi / 180
+        tower_tank.rectangle.rotate -= angle_change * math.pi / 180
+    if tower_tank.rotate > angle:
+        tower_tank.rotate += angle_change * pi / 180
+        tower_tank.rectangle.rotate += angle_change * math.pi / 180
+    canvas.delete(tower_tank_1)
+    points_rectangle(tower_tank.rectangle)
+    tower_tank_1 = draw_a_object(tower_tank, COLOR_TOWER_TANK)
 
 
 def update_physics():
-    global last_time, tank_1, tower_tank_1, gun_1
+    global last_time, tank_1, tower_tank_1, gun_1, bullet_1, flag_for_bullet
     cur_time = time.time()
     if last_time:
         dt = cur_time - last_time
         dx_tank = tank.speed.x * dt
         dy_tank = tank.speed.y * dt
-        # dx_bullet = bullet.speed.x * dt
-        # dy_bullet = bullet.speed.y * dt
+
+        dx_bullet = bullet.speed.x * dt
+        dy_bullet = bullet.speed.y * dt
 
         tank.centre.x += dx_tank
         tank.centre.y += dy_tank
         tower_tank.centre.x += dx_tank
         tower_tank.centre.y += dy_tank
-        # bullet.centre.x += dx_bullet
-        # bullet.centre.y += dy_bullet
-        # points_bullet(bullet)
 
-        tank_max_x = FIELD_X + FIELD_WIDTH - BORDER_WIDTH - max(tank.point_1.x, tank.point_2.x, tank.point_3.x,
-                                                                tank.point_4.x)
-        tank_max_y = FIELD_Y + FIELD_HEIGHT - BORDER_WIDTH - max(tank.point_1.y, tank.point_2.y, tank.point_3.y,
-                                                                 tank.point_4.y)
-        tank_min_x = FIELD_X + BORDER_WIDTH + max(tank.point_1.x, tank.point_2.x, tank.point_3.x, tank.point_4.x)
-        tank_min_y = FIELD_Y + BORDER_WIDTH + max(tank.point_1.y, tank.point_2.y, tank.point_3.y, tank.point_4.y)
+        bullet.centre.x += dx_bullet
+        bullet.centre.y += dy_bullet
+        points_rectangle(bullet.rectangle)
+
+        bullet_max_x = FIELD_X + FIELD_WIDTH - BORDER_WIDTH - max(bullet.rectangle.point_1.x,
+                                                                  bullet.rectangle.point_2.x,
+                                                                  bullet.rectangle.point_3.x,
+                                                                  bullet.rectangle.point_4.x)
+        bullet_max_y = FIELD_Y + FIELD_HEIGHT - BORDER_WIDTH - max(bullet.rectangle.point_1.y,
+                                                                   bullet.rectangle.point_2.y,
+                                                                   bullet.rectangle.point_3.y,
+                                                                   bullet.rectangle.point_4.y)
+        bullet_min_x = FIELD_X + BORDER_WIDTH + max(bullet.rectangle.point_1.x, bullet.rectangle.point_2.x,
+                                                    bullet.rectangle.point_3.x, bullet.rectangle.point_4.x)
+        bullet_min_y = FIELD_Y + BORDER_WIDTH + max(bullet.rectangle.point_1.y, bullet.rectangle.point_2.y,
+                                                    bullet.rectangle.point_3.y, bullet.rectangle.point_4.y)
+
+        if not (bullet_min_x <= bullet.centre.x <= bullet_max_x):
+            canvas.delete(bullet_1)
+            flag_for_bullet = False
+        if not (bullet_min_y <= bullet.centre.y <= bullet_max_y):
+            canvas.delete(bullet_1)
+            flag_for_bullet = False
+
+        tank_max_x = FIELD_X + FIELD_WIDTH - BORDER_WIDTH - max(tank.rectangle.point_1.x, tank.rectangle.point_2.x,
+                                                                tank.rectangle.point_3.x, tank.rectangle.point_4.x)
+        tank_max_y = FIELD_Y + FIELD_HEIGHT - BORDER_WIDTH - max(tank.rectangle.point_1.y, tank.rectangle.point_2.y,
+                                                                 tank.rectangle.point_3.y, tank.rectangle.point_4.y)
+        tank_min_x = FIELD_X + BORDER_WIDTH + max(tank.rectangle.point_1.x, tank.rectangle.point_2.x,
+                                                  tank.rectangle.point_3.x, tank.rectangle.point_4.x)
+        tank_min_y = FIELD_Y + BORDER_WIDTH + max(tank.rectangle.point_1.y, tank.rectangle.point_2.y,
+                                                  tank.rectangle.point_3.y, tank.rectangle.point_4.y)
         if not (tank_min_x <= tank.centre.x <= tank_max_x):
             tank.centre.x = max(tank_min_x, min(tank.centre.x, tank_max_x))
             tower_tank.centre.x = tank.centre.x
-            points_gun(gun)
+            gun_change(gun)
             tank.speed.x = 0
         if not (tank_min_y <= tank.centre.y <= tank_max_y):
             tank.centre.y = max(tank_min_y, min(tank.centre.y, tank_max_y))
             tower_tank.centre.y = tank.centre.y
-            points_gun(gun)
-            tank.speed.x = 0
+            gun_change(gun)
+            tank.speed.y = 0
+
         canvas.delete(tank_1)
         canvas.delete(tower_tank_1)
         canvas.delete(gun_1)
-        # canvas.delete(bullet_1)
-        tank_1 = draw_a_tank(tank, COLOR_TANK)
-        tower_tank_1 = draw_a_tank(tower_tank, COLOR_TOWER_TANK)
-        gun_1 = draw_a_gun(gun, COLOR_GUN)
-        # bullet_1 = draw_a_bullet(bullet, COLOR_BULLET)
+        canvas.delete(bullet_1)
+
+        tank_1 = draw_a_object(tank, COLOR_TANK)
+        tower_tank_1 = draw_a_object(tower_tank, COLOR_TOWER_TANK)
+
+        gun_change(gun)
+        gun_1 = draw_a_object(gun, COLOR_GUN)
+        root.title(gun.rectangle.rotate)
+
+        if flag_for_bullet is True:
+            bullet_1 = draw_a_object(bullet, COLOR_BULLET)
     last_time = cur_time
     # update physics as frequent as possible
     root.after(16, update_physics)
 
 
 root.bind("<Key>", process_key)
-# root.bind("<w>", press_w)
-# root.bind("<s>", press_s)
-# root.bind("<d>", press_d)
-# root.bind("<a>", press_a)
-# root.bind("<Escape>", press_esc)
-root.bind("<v>", process_shot)
+root.bind("<space>", process_shot)
 root.bind("<Button-1>", process_mouse)
+root.bind("<Motion>", process_rotate_tower)
 
 update_physics()
 root.mainloop()
