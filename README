@@ -1,5 +1,7 @@
 http://opk.afti.ru/tasks/fizicheskiy-dvizhok
 The simplified task of the "Physics engine" project.
 When writing this project, the Tkinter library is used.
-Game something between the game tanks and base defense.
+The game is called a tank.
 This project is for fun.
+
+To start the game, run the file called "Play_of_tank.py"
