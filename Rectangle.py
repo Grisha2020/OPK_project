@@ -64,7 +64,7 @@ def points_rectangle(rectangle: Rectangle):
 
 def intersection(rectangle1: Rectangle, rectangle2: Rectangle) -> bool:
     """
-    Is the center of the second rectangle inside the first rectangle
+    Checks if two rectangles intersect
     :param rectangle1:
     :param rectangle2:
     :return:
@@ -73,28 +73,29 @@ def intersection(rectangle1: Rectangle, rectangle2: Rectangle) -> bool:
     arr_x2, arr_y2 = points_rectangle(rectangle2)
     for i in range(len(arr_x1)):
         if in_rectangle(rectangle2,
-                        create_point(rectangle1.centre.x + arr_x1[i], rectangle1.centre.y + arr_y1[i])) is True:
+                        create_point(rectangle1.centre.x + arr_x1[i], rectangle1.centre.y + arr_y1[i]), 0) is True:
             return True
     for i in range(len(arr_x2)):
         if in_rectangle(rectangle1,
-                        create_point(rectangle2.centre.x + arr_x2[i], rectangle2.centre.y + arr_y2[i])) is True:
+                        create_point(rectangle2.centre.x + arr_x2[i], rectangle2.centre.y + arr_y2[i]), 0) is True:
             return True
     return False
 
 
-def in_rectangle(rectangle: Rectangle, point: Point) -> bool:
+def in_rectangle(rectangle: Rectangle, point: Point, increase: int) -> bool:
     """
-    finds out if the point is inside the rectangle
+    Is the point inside the rectangle
     :param rectangle:
     :param point:
+    :param increase:
     :return:
     """
     new_x = (point.x - rectangle.centre.x) * math.cos(rectangle.rotate) - (point.y - rectangle.centre.y) * math.sin(
         rectangle.rotate)
     new_y = (point.x - rectangle.centre.x) * math.sin(rectangle.rotate) + (point.y - rectangle.centre.y) * math.cos(
         rectangle.rotate)
-    arr_x = [-rectangle.sizes.x, rectangle.sizes.x]
-    arr_y = [-rectangle.sizes.y, rectangle.sizes.y]
+    arr_x = [-(rectangle.sizes.x + increase), (rectangle.sizes.x + increase)]
+    arr_y = [-(rectangle.sizes.y + increase), (rectangle.sizes.y + increase)]
     if arr_x[0] < new_x < arr_x[1] and arr_y[0] < new_y < arr_y[1]:
         return True
     return False
