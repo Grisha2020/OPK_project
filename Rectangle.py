@@ -29,11 +29,11 @@ def create_rectangle(x_centre: int, y_centre: int, height: int, width: int, star
 
 
 def rotate_rectangle(rectangle: Rectangle, angle_change) -> None:
-    if rectangle.rotate > math.pi:
+    rectangle.rotate += angle_change
+    if rectangle.rotate >= math.pi:
         rectangle.rotate -= 2 * math.pi
     if rectangle.rotate <= -math.pi:
         rectangle.rotate += 2 * math.pi
-    rectangle.rotate += angle_change
 
 
 def move_rectangle(rectangle: Rectangle, dr: Point) -> None:
@@ -69,7 +69,17 @@ def intersection(rectangle1: Rectangle, rectangle2: Rectangle) -> bool:
     :param rectangle2:
     :return:
     """
-    return in_rectangle(rectangle1, create_point(rectangle2.centre.x, rectangle2.centre.y))
+    arr_x1, arr_y1 = points_rectangle(rectangle1)
+    arr_x2, arr_y2 = points_rectangle(rectangle2)
+    for i in range(len(arr_x1)):
+        if in_rectangle(rectangle2,
+                        create_point(rectangle1.centre.x + arr_x1[i], rectangle1.centre.y + arr_y1[i])) is True:
+            return True
+    for i in range(len(arr_x2)):
+        if in_rectangle(rectangle1,
+                        create_point(rectangle2.centre.x + arr_x2[i], rectangle2.centre.y + arr_y2[i])) is True:
+            return True
+    return False
 
 
 def in_rectangle(rectangle: Rectangle, point: Point) -> bool:
@@ -79,9 +89,13 @@ def in_rectangle(rectangle: Rectangle, point: Point) -> bool:
     :param point:
     :return:
     """
-    arr_x = [rectangle.centre.x - rectangle.sizes.x, rectangle.centre.x + rectangle.sizes.x]
-    arr_y = [rectangle.centre.y - rectangle.sizes.y, rectangle.centre.y + rectangle.sizes.y]
-    if arr_x[0] < point.x < arr_x[1] and arr_y[0] < point.y < arr_y[1]:
+    new_x = (point.x - rectangle.centre.x) * math.cos(rectangle.rotate) - (point.y - rectangle.centre.y) * math.sin(
+        rectangle.rotate)
+    new_y = (point.x - rectangle.centre.x) * math.sin(rectangle.rotate) + (point.y - rectangle.centre.y) * math.cos(
+        rectangle.rotate)
+    arr_x = [-rectangle.sizes.x, rectangle.sizes.x]
+    arr_y = [-rectangle.sizes.y, rectangle.sizes.y]
+    if arr_x[0] < new_x < arr_x[1] and arr_y[0] < new_y < arr_y[1]:
         return True
     return False
 

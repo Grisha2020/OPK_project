@@ -4,7 +4,6 @@ import tkinter as tk
 import time
 import math
 import random
-import gc
 import Rectangle
 import Tank
 import Bullet_and_target
@@ -66,7 +65,7 @@ def change_score(score_1: Score, increase: int) -> None:
 def process_shot(event):
     global arr_bullet, time_for_bullet
     if time_for_bullet + TIME_RESPAWN_BULLET < time.time():
-        if len(arr_bullet) <= 15:
+        if len(arr_bullet) <= MAXIMUM_NUMBER_OF_BULLET:
             bullet = Bullet_and_target.create_bullet(tank1, BULLET_SPEED, COLOR_BULLET)
             arr_bullet.append(bullet)
             arr_bullet_draw.append(draw_bullet(bullet))
@@ -109,10 +108,10 @@ def process_rotate_tower(mouse: Rectangle.Point) -> None:
     """
     if mouse.x - tank1.tower.rectangle.centre.x > 0:
         angle = pi / 2 - math.atan(
-            (mouse.y - tank1.tower.rectangle.centre.y) / (mouse.x - tank1.tower.rectangle.centre.x))
+            (-mouse.y + tank1.tower.rectangle.centre.y) / (mouse.x - tank1.tower.rectangle.centre.x))
     elif mouse.x - tank1.tower.rectangle.centre.x < 0:
         angle = -pi / 2 - math.atan(
-            (mouse.y - tank1.tower.rectangle.centre.y) / (mouse.x - tank1.tower.rectangle.centre.x))
+            (-mouse.y + tank1.tower.rectangle.centre.y) / (mouse.x - tank1.tower.rectangle.centre.x))
     else:
         if mouse.y > tank1.tower.rectangle.centre.y:
             angle = pi
@@ -120,14 +119,14 @@ def process_rotate_tower(mouse: Rectangle.Point) -> None:
             angle = 0
     angle_change = 2
     if angle > 0:
-        if angle - pi < tank1.tower.rectangle.rotate < angle:
+        if angle - pi <= tank1.tower.rectangle.rotate <= angle:
             Tank.rotate_tower_gun(tank1, angle_change * pi / 180)
-        elif -pi < tank1.tower.rectangle.rotate < angle - pi or angle < tank1.tower.rectangle.rotate < pi:
+        elif -pi <= tank1.tower.rectangle.rotate <= angle - pi or angle < tank1.tower.rectangle.rotate < pi:
             Tank.rotate_tower_gun(tank1, -angle_change * pi / 180)
     else:
-        if angle < tank1.tower.rectangle.rotate < angle + pi:
+        if angle <= tank1.tower.rectangle.rotate <= angle + pi:
             Tank.rotate_tower_gun(tank1, -angle_change * pi / 180)
-        elif -pi < tank1.tower.rectangle.rotate < angle or angle + pi < tank1.tower.rectangle.rotate < pi:
+        elif -pi <= tank1.tower.rectangle.rotate <= angle or angle + pi < tank1.tower.rectangle.rotate < pi:
             Tank.rotate_tower_gun(tank1, angle_change * pi / 180)
 
 
@@ -137,8 +136,6 @@ def update_physics():
     :return:
     """
     global last_time, tank1, arr_bullet, arr_target, time_for_target
-    gc.collect()
-    gc.disable()
     cur_time = time.time()
     if last_time:
         dt = cur_time - last_time
@@ -214,17 +211,17 @@ def update_physics():
                     if Rectangle.intersection(arr_target[i].rectangle, arr_bullet[j].rectangle) is True:
                         arr_del_bul_1.append(j)
                         arr_del_tar.append(i)
-            for _ in range(len(arr_del_tar)):
+            for i in range(len(arr_del_tar)):
                 try:
                     canvas.delete(arr_target_draw[arr_del_tar[0]])
                     canvas.delete(arr_bullet_draw[arr_del_bul_1[0]])
+                    del arr_bullet_draw[arr_del_bul_1[0]]
+                    del arr_bullet[arr_del_bul_1[0]]
+                    del arr_target_draw[arr_del_tar[0]]
+                    del arr_target[arr_del_tar[0]]
+                    change_score(score, 1)
                 except IndexError:
                     continue
-                del arr_bullet_draw[arr_del_bul_1[0]]
-                del arr_bullet[arr_del_bul_1[0]]
-                del arr_target_draw[arr_del_tar[0]]
-                del arr_target[arr_del_tar[0]]
-                change_score(score, 1)
             arr_del_tar = []
             for m in range(len(arr_target)):
                 if Rectangle.intersection(arr_target[m].rectangle, tank1.body.rectangle) is True:
@@ -255,7 +252,6 @@ def update_physics():
 
     last_time = cur_time
     # update physics as frequent as possible
-    gc.enable()
     root.after(16, update_physics)
 
 
@@ -283,7 +279,8 @@ FIELD_HEIGHT = SCREEN_HEIGHT - FIELD_Y - FIELD_PADDING
 
 TANK_ACCELERATION = 10
 BULLET_SPEED = 500
-TIME_RESPAWN_BULLET = 1
+TIME_RESPAWN_BULLET = 0.01
+MAXIMUM_NUMBER_OF_BULLET = 100
 
 COLOR_BORDER = "#808080"
 COLOR_FIELD = "#00FF00"
@@ -295,8 +292,8 @@ COLOR_TARGET = "yellow"
 COLOR_TARGET_STRIP = "#FFC0CB"
 COLOR_SCORE = "black"
 
-MAXIMUM_NUMBER_OF_TARGETS = 10
-TIME_RESPAWN_TARGETS = 2
+MAXIMUM_NUMBER_OF_TARGETS = 150
+TIME_RESPAWN_TARGETS = 0.01
 ROTATE_TARGETS = 0
 
 START_VALUE_SCORE = 0
