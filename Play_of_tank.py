@@ -117,17 +117,18 @@ def process_rotate_tower(mouse: Rectangle.Point) -> None:
             angle = pi
         else:
             angle = 0
-    angle_change = 2
-    if angle > 0:
-        if angle - pi <= tank1.tower.rectangle.rotate <= angle:
-            Tank.rotate_tower_gun(tank1, angle_change * pi / 180)
-        elif -pi <= tank1.tower.rectangle.rotate <= angle - pi or angle < tank1.tower.rectangle.rotate < pi:
-            Tank.rotate_tower_gun(tank1, -angle_change * pi / 180)
-    else:
-        if angle <= tank1.tower.rectangle.rotate <= angle + pi:
-            Tank.rotate_tower_gun(tank1, -angle_change * pi / 180)
-        elif -pi <= tank1.tower.rectangle.rotate <= angle or angle + pi < tank1.tower.rectangle.rotate < pi:
-            Tank.rotate_tower_gun(tank1, angle_change * pi / 180)
+    angle_change = 6
+    if abs(angle - tank1.tower.rectangle.rotate) >= angle_change * pi / 180:
+        if angle > 0:
+            if angle - pi <= tank1.tower.rectangle.rotate <= angle:
+                Tank.rotate_tower_gun(tank1, angle_change * pi / 180)
+            elif -pi <= tank1.tower.rectangle.rotate <= angle - pi or angle < tank1.tower.rectangle.rotate < pi:
+                Tank.rotate_tower_gun(tank1, -angle_change * pi / 180)
+        else:
+            if angle <= tank1.tower.rectangle.rotate <= angle + pi:
+                Tank.rotate_tower_gun(tank1, -angle_change * pi / 180)
+            elif -pi <= tank1.tower.rectangle.rotate <= angle or angle + pi < tank1.tower.rectangle.rotate < pi:
+                Tank.rotate_tower_gun(tank1, angle_change * pi / 180)
 
 
 def update_physics():
