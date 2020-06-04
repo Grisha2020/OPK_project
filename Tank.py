@@ -1,6 +1,5 @@
 import math
 import Rectangle
-import Play_of_tank
 
 
 class Body:
@@ -85,9 +84,9 @@ def speed_change(dspeed: int, tank: Tank) -> None:
     :return:
     """
     speed = math.hypot(abs(tank.speed.x), abs(tank.speed.y))
-    tank.speed.x = (speed + Play_of_tank.TANK_ACCELERATION * dspeed) * math.cos(
+    tank.speed.x = (speed + dspeed) * math.cos(
         tank.body.rectangle.rotate - math.pi / 2)
-    tank.speed.y = (speed + Play_of_tank.TANK_ACCELERATION * dspeed) * math.sin(
+    tank.speed.y = (speed + dspeed) * math.sin(
         tank.body.rectangle.rotate - math.pi / 2)
     max_speed = 400
     acceleration = 10
