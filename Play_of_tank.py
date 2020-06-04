@@ -189,12 +189,12 @@ def update_physics():
                                          FIELD_HEIGHT - BORDER_WIDTH - TARGET_HEIGHT)
                     flag_1 = False
                     for i in range(len(arr_target)):
-                        if Rectangle.in_rectangle(arr_target[i].rectangle, new_point) is True:
+                        if Rectangle.in_rectangle(arr_target[i].rectangle, new_point, TARGET_WIDTH) is True:
                             flag_1 = True
                             break
                     if flag_1 is True:
                         continue
-                    if Rectangle.in_rectangle(tank1.body.rectangle, new_point) is True:
+                    if Rectangle.in_rectangle(tank1.body.rectangle, new_point, TARGET_WIDTH) is True:
                         continue
                     flag_of_target = True
                 arr_target.append(
