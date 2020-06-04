@@ -1,7 +1,10 @@
+# !/usr/bin/env python3
+
 import tkinter as tk
 import time
 import math
 import random
+import gc
 import Rectangle
 import Tank
 import Bullet_and_target
@@ -61,10 +64,13 @@ def change_score(score_1: Score, increase: int) -> None:
 
 
 def process_shot(event):
-    global arr_bullet
-    bullet = Bullet_and_target.create_bullet(tank1, BULLET_SPEED, COLOR_BULLET)
-    arr_bullet.append(bullet)
-    arr_bullet_draw.append(draw_bullet(bullet))
+    global arr_bullet, time_for_bullet
+    if time_for_bullet + TIME_RESPAWN_BULLET < time.time():
+        if len(arr_bullet) <= 15:
+            bullet = Bullet_and_target.create_bullet(tank1, BULLET_SPEED, COLOR_BULLET)
+            arr_bullet.append(bullet)
+            arr_bullet_draw.append(draw_bullet(bullet))
+            time_for_bullet = time.time()
 
 
 def process_key(event):
@@ -131,6 +137,8 @@ def update_physics():
     :return:
     """
     global last_time, tank1, arr_bullet, arr_target, time_for_target
+    gc.collect()
+    gc.disable()
     cur_time = time.time()
     if last_time:
         dt = cur_time - last_time
@@ -247,6 +255,7 @@ def update_physics():
 
     last_time = cur_time
     # update physics as frequent as possible
+    gc.enable()
     root.after(16, update_physics)
 
 
@@ -274,6 +283,7 @@ FIELD_HEIGHT = SCREEN_HEIGHT - FIELD_Y - FIELD_PADDING
 
 TANK_ACCELERATION = 10
 BULLET_SPEED = 500
+TIME_RESPAWN_BULLET = 1
 
 COLOR_BORDER = "#808080"
 COLOR_FIELD = "#00FF00"
@@ -285,7 +295,7 @@ COLOR_TARGET = "yellow"
 COLOR_TARGET_STRIP = "#FFC0CB"
 COLOR_SCORE = "black"
 
-MAXIMUM_NUMBER_OF_TARGETS = 100
+MAXIMUM_NUMBER_OF_TARGETS = 10
 TIME_RESPAWN_TARGETS = 2
 ROTATE_TARGETS = 0
 
@@ -322,6 +332,7 @@ draw_tank(tank1)
 mouse_position = Rectangle.create_point(FIELD_X + FIELD_WIDTH / 2, FIELD_Y + FIELD_HEIGHT / 2)
 last_time = None
 time_for_target = time.time()
+time_for_bullet = time.time()
 
 root.bind("<Key>", process_key)
 root.bind("<space>", process_shot)
