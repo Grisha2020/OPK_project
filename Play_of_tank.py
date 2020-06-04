@@ -211,14 +211,15 @@ def update_physics():
                     if Rectangle.intersection(arr_target[i].rectangle, arr_bullet[j].rectangle) is True:
                         arr_del_bul_1.append(j)
                         arr_del_tar.append(i)
+                        break
             for i in range(len(arr_del_tar)):
                 try:
-                    canvas.delete(arr_target_draw[arr_del_tar[0]])
-                    canvas.delete(arr_bullet_draw[arr_del_bul_1[0]])
-                    del arr_bullet_draw[arr_del_bul_1[0]]
-                    del arr_bullet[arr_del_bul_1[0]]
-                    del arr_target_draw[arr_del_tar[0]]
-                    del arr_target[arr_del_tar[0]]
+                    canvas.delete(arr_target_draw[arr_del_tar[len(arr_del_tar) - i - 1]])
+                    canvas.delete(arr_bullet_draw[arr_del_bul_1[len(arr_del_tar) - i - 1]])
+                    del arr_bullet_draw[arr_del_bul_1[len(arr_del_tar) - i - 1]]
+                    del arr_bullet[arr_del_bul_1[len(arr_del_tar) - i - 1]]
+                    del arr_target_draw[arr_del_tar[len(arr_del_tar) - i - 1]]
+                    del arr_target[arr_del_tar[len(arr_del_tar) - i - 1]]
                     change_score(score, 1)
                 except IndexError:
                     continue
@@ -279,7 +280,7 @@ FIELD_HEIGHT = SCREEN_HEIGHT - FIELD_Y - FIELD_PADDING
 
 TANK_ACCELERATION = 10
 BULLET_SPEED = 500
-TIME_RESPAWN_BULLET = 0.01
+TIME_RESPAWN_BULLET = 0.4
 MAXIMUM_NUMBER_OF_BULLET = 100
 
 COLOR_BORDER = "#808080"
@@ -292,8 +293,8 @@ COLOR_TARGET = "yellow"
 COLOR_TARGET_STRIP = "#FFC0CB"
 COLOR_SCORE = "black"
 
-MAXIMUM_NUMBER_OF_TARGETS = 150
-TIME_RESPAWN_TARGETS = 0.01
+MAXIMUM_NUMBER_OF_TARGETS = 100
+TIME_RESPAWN_TARGETS = 1
 ROTATE_TARGETS = 0
 
 START_VALUE_SCORE = 0
@@ -332,7 +333,7 @@ time_for_target = time.time()
 time_for_bullet = time.time()
 
 root.bind("<Key>", process_key)
-root.bind("<space>", process_shot)
+root.bind("<Button-1>", process_shot)
 root.bind("<Motion>", mouse_position_memorization)
 
 update_physics()
