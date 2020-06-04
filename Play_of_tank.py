@@ -72,9 +72,9 @@ def process_key(event):
     # event.char - regular symbols
     # event.keysym - special keys
     if event.keysym == "Up" or event.char == "w" or event.char == "ц":
-        dspeed += 1
+        dspeed += TANK_ACCELERATION
     elif event.keysym == "Down" or event.char == "s" or event.char == "ы":
-        dspeed -= 1
+        dspeed -= TANK_ACCELERATION
     elif event.keysym == "Left" or event.char == "a" or event.char == "ф":
         Tank.rotate_tank(tank1, -5 * pi / 180)
     elif event.keysym == "Right" or event.char == "d" or event.char == "в":
