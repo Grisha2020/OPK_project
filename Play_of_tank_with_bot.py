@@ -35,9 +35,9 @@ def draw_rectangle(rectangle: Rectangle.Rectangle) -> None:
 
 def draw_tank(tank: Tank) -> None:
     if len(tank.polygons) != 0:
-        for _ in range(len(tank.polygons)):
-            canvas.delete(tank.polygons[0])
-            del tank.polygons[0]
+        for i in range(len(tank.polygons)):
+            canvas.delete(tank.polygons[i])
+    del tank.polygons = []
     tank.polygons.append(draw_rectangle(tank.body.rectangle))
     tank.polygons.append(draw_rectangle(tank.tower.rectangle))
     tank.polygons.append(draw_rectangle(tank.gun.rectangle))
@@ -420,9 +420,11 @@ root.resizable(False, False)
 canvas = tk.Canvas(root, width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
 canvas.pack()
 
-text = canvas.create_text(SCREEN_WIDTH / 2, TITLE_Y,
-                          text="Use arrows or WASD to accelerate the TANK, use mouse"
-                               " to move the TANK, use Esc to exit.")
+text = canvas.create_text(X_TEXT, Y_TEXT,
+                          text="Use the WASD buttons to speed up, slow down and turn the tank, use mouse movement\nto "
+                               "rotate the tank tower, use LMB to shoot and score points hitting targets,"
+                               " use Esc to exit.",
+                          font=(FONT_TEXT, FONT_SIZE_TEXT), fill=TEXT_COLOR_ON_TOP)
 
 border = canvas.create_rectangle(FIELD_X, FIELD_Y,
                                  FIELD_X + FIELD_WIDTH, FIELD_Y + FIELD_HEIGHT,
