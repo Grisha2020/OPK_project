@@ -1,7 +1,38 @@
 http://opk.afti.ru/tasks/fizicheskiy-dvizhok
 The simplified task of the "Physics engine" project.
-When writing this project, the Tkinter library is used.
-The game is called a tank.
+For this program, libraries are needed, such as tkinter, time, math, random, if you do not have them, then download (although almost all except tkinter are in the python program)
+The game is called a "Tank".
 This project is for fun.
 
-To start the game, run the file called "Play_of_tank.py"
+To start the game, run the file called "Play_of_tank.py".
+
+All changes indicated below should occur at the end of the file "Play_of_tank.py".
+
+You can change the maximum number of targets (squares) by changing a variable named “MAXIMUM_NUMBER_OF_TARGETS”. It is advisable that the value you enter be of type int.
+
+You can also change the time after which target will appear. To do this, you need to change the variable "TIME_RESPAWN_TARGETS".
+
+You can change the cooldown between shots by changing the variable "TIME_RESPAWN_BULLET".
+
+You can change the maximum speed of the tank by changing the variable "MAXIMUM_SPEED". It is advisable that the value you enter be of type int.
+
+You can change the acceleration/deceleration of the tank by changing the variable "TANK_ACCELERATION". It is advisable that the value you enter be of type int.
+
+You can change the speed of rotation of the tank by changing the variable "TANK_TURNING_SPEED", this variable should be indicated in radians.
+
+You can change the rotation speed of the tank turret by changing the variable "TOWER_TURNING_SPEED", this variable should be indicated in radians.
+
+You can resize the target by changing the variable "TARGET_SIZES".
+
+You can resize the tank by changing the variables "TANK_WIDTH", "TANK_HEIGHT", "TOWER_TANK_SIZE", "GUN_HEIGHT", "GUN_WIDTH".
+
+You can change the colors of the corresponding elements by changing variables with the subscript "COLOR_".
+
+You can change the initial angle of the tank by changing the variable "START_ROTATE_TANK", this variable should be indicated in radians.
+
+You can change the starting angle of the target by changing the variable "ROTATE_TARGETS", this variable should be indicated in radians. If you do this, targets will go out of the field, and the contact will not work correctly.
+
+You can change the speed of the bullet by changing the variable "BULLET_SPEED".
+
+
+Everything else is not desirable to change, although you can experiment

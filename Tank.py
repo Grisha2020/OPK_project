@@ -24,15 +24,22 @@ class Tank:
 
 def create_tank(centre_x: int, centre_y: int, height_body: int, width_body: int, color_body: str, height_tower: int,
                 width_tower: int, color_tower: str, height_gun: int, width_gun: int, color_gun: str, speed_x: int,
-                speed_y: int) -> Tank:
+                speed_y: int, start_rotate: float) -> Tank:
     tank = Tank()
     tank.body = Body()
-    tank.body.rectangle = Rectangle.create_rectangle(centre_x, centre_y, height_body, width_body, 0, color_body)
+    tank.body.rectangle = Rectangle.create_rectangle(centre_x, centre_y, height_body, width_body, start_rotate,
+                                                     color_body)
     tank.tower = Tower()
-    tank.tower.rectangle = Rectangle.create_rectangle(centre_x, centre_y, height_tower, width_tower, 0, color_tower)
+    tank.tower.rectangle = Rectangle.create_rectangle(centre_x, centre_y, height_tower, width_tower, start_rotate,
+                                                      color_tower)
     tank.gun = Gun()
     tank.gun.rectangle = Rectangle.create_rectangle(centre_x, centre_y - height_tower - height_gun, height_gun,
-                                                    width_gun, 0, color_gun)
+                                                    width_gun, start_rotate, color_gun)
+    tank.gun.rectangle.centre.x, tank.gun.rectangle.centre.y = \
+        tank.tower.rectangle.centre.x + (tank.tower.rectangle.sizes.y + tank.gun.rectangle.sizes.x) * \
+        math.cos(tank.tower.rectangle.rotate - math.pi / 2), \
+        tank.tower.rectangle.centre.y + (tank.tower.rectangle.sizes.y + tank.gun.rectangle.sizes.x) * \
+        math.sin(tank.tower.rectangle.rotate - math.pi / 2)
     tank.speed = Rectangle.create_point(speed_x, speed_y)
     return tank
 
@@ -76,19 +83,22 @@ def rotate_tower_gun(tank: Tank, angle_change) -> None:
         math.sin(tank.tower.rectangle.rotate - math.pi / 2)
 
 
-def speed_change(dspeed: int, tank: Tank) -> None:
+def speed_change(dspeed: int, tank: Tank, max_speed: int) -> None:
     """
     Changes the speed of all parts of the tank
     :param dspeed:
     :param tank:
+    :param max_speed:
     :return:
     """
     speed = math.hypot(abs(tank.speed.x), abs(tank.speed.y))
-    tank.speed.x = (speed + dspeed) * math.cos(
-        tank.body.rectangle.rotate - math.pi / 2)
-    tank.speed.y = (speed + dspeed) * math.sin(
-        tank.body.rectangle.rotate - math.pi / 2)
-    max_speed = 400
+    if speed + dspeed <= 0:
+        tank.speed.x, tank.speed.y = 0, 0
+    else:
+        tank.speed.x = (speed + dspeed) * math.cos(
+            tank.body.rectangle.rotate - math.pi / 2)
+        tank.speed.y = (speed + dspeed) * math.sin(
+            tank.body.rectangle.rotate - math.pi / 2)
     acceleration = 10
     if abs(tank.speed.x) > max_speed:
         while abs(tank.speed.x) > max_speed:

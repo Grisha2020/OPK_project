@@ -96,7 +96,7 @@ def in_rectangle(rectangle: Rectangle, point: Point, increase: int) -> bool:
         rectangle.rotate)
     arr_x = [-(rectangle.sizes.x + increase), (rectangle.sizes.x + increase)]
     arr_y = [-(rectangle.sizes.y + increase), (rectangle.sizes.y + increase)]
-    if arr_x[0] < new_x < arr_x[1] and arr_y[0] < new_y < arr_y[1]:
+    if arr_x[0] <= new_x <= arr_x[1] and arr_y[0] <= new_y <= arr_y[1]:
         return True
     return False
 
