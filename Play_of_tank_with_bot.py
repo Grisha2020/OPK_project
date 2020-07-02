@@ -15,7 +15,17 @@ class Score:
     draw_score = None
 
 
-def draw_rectangle(rectangle: Rectangle.Rectangle) -> None:
+class HealthBar:
+    number_of_shots: int = None
+    damage: int = None
+    start: Rectangle.Point = None
+    length: int = None
+    color: str = None
+    width: int = None
+    draw_bar = None
+
+
+def draw_rectangle(rectangle: Rectangle.Rectangle):
     """
     Draws a rectangle at 4 vertices
     :param rectangle:
@@ -34,21 +44,30 @@ def draw_rectangle(rectangle: Rectangle.Rectangle) -> None:
 
 
 def draw_tank(tank: Tank) -> None:
-    if len(tank.polygons) != 0:
-        for i in range(len(tank.polygons)):
-            canvas.delete(tank.polygons[i])
-    del tank.polygons = []
+    """
+    Draws all three parts of the tank (body, turret and gun)
+    :param tank:
+    :return:
+    """
+    # if len(tank.polygons) != 0:
+    #     for i in range(len(tank.polygons)):
+    #         canvas.delete(tank.polygons[i])
+    #     tank.polygons = []
+    del_tank_polygons(tank)
     tank.polygons.append(draw_rectangle(tank.body.rectangle))
     tank.polygons.append(draw_rectangle(tank.tower.rectangle))
     tank.polygons.append(draw_rectangle(tank.gun.rectangle))
 
 
+def del_tank_polygons(tank: Tank):
+    if len(tank.polygons) != 0:
+        for i in range(len(tank.polygons)):
+            canvas.delete(tank.polygons[i])
+        tank.polygons = []
+
+
 def draw_bullet(bullet: Bullet_and_target.Bullet):
     return draw_rectangle(bullet.rectangle)
-
-
-def draw_target(target: Bullet_and_target.Target):
-    return draw_rectangle(target.rectangle)
 
 
 def create_score(value: int, color: str, centre_x: int, centre_y: int, font: str, font_size: int) -> Score:
@@ -63,21 +82,45 @@ def change_score(score_1: Score, increase: int) -> None:
     canvas.itemconfig(score_1.draw_score, text=score_1.value)
 
 
-def process_shot(event):
-    shots(tank1, time_for_bullet)
+def create_health_bar(number_of_shots: int, health_x: int, health_y: int, length: int, color: str,
+                      width: int) -> HealthBar:
+    health_return = HealthBar()
+    health_return.number_of_shots = number_of_shots
+    health_return.damage = 0
+    health_return.start = Rectangle.create_point(health_x, health_y)
+    health_return.length = length
+    health_return.color = color
+    health_return.width = width
+    health_return.draw_bar = canvas.create_line(health_return.start.x, health_return.start.y,
+                                                health_return.start.x + health_return.length, health_return.start.y,
+                                                fill=health_return.color, width=health_return.width)
+    return health_return
 
 
-def shots(tank: Tank.Tank, time_tank):
+def change_health(health_copy: HealthBar) -> None:
+    canvas.delete(health_copy.draw_bar)
+    health_copy.draw_bar = canvas.create_line(health_copy.start.x, health_copy.start.y,
+                                              health_copy.start.x + health_copy.length * (
+                                                      health_copy.number_of_shots - health_copy.damage) /
+                                              health_copy.number_of_shots,
+                                              health_copy.start.y, fill=health_copy.color, width=health_copy.width)
+
+
+def process_shot(event) -> None:
+    shots(tank1, TIME_RESPAWN_BULLET)
+
+
+def shots(tank: Tank.Tank, time_respawn) -> None:
     global arr_bullet
-    if time_tank + TIME_RESPAWN_BULLET < time.time():
+    if tank.time_shot + time_respawn < time.time():
         if len(arr_bullet) <= MAXIMUM_NUMBER_OF_BULLET:
             bullet = Bullet_and_target.create_bullet(tank, BULLET_SPEED, COLOR_BULLET)
             arr_bullet.append(bullet)
             arr_bullet_draw.append(draw_bullet(bullet))
-            time_tank = time.time()
+            tank.time_shot = time.time()
 
 
-def process_key(event):
+def process_key(event) -> None:
     dspeed = 0
     # event.char - regular symbols
     # event.keysym - special keys
@@ -86,16 +129,16 @@ def process_key(event):
     elif event.keysym == "Down" or event.char == "s" or event.char == "ы":
         dspeed -= TANK_ACCELERATION
     elif event.keysym == "Left" or event.char == "a" or event.char == "ф":
-        Tank.rotate_tank(tank1, -5 * pi / 180)
+        Tank.rotate_tank(tank1, -TANK_TURNING_SPEED)
     elif event.keysym == "Right" or event.char == "d" or event.char == "в":
-        Tank.rotate_tank(tank1, 5 * pi / 180)
+        Tank.rotate_tank(tank1, TANK_TURNING_SPEED)
     elif event.keysym == "Escape":
         root.quit()
         return
     Tank.speed_change(dspeed, tank1, MAXIMUM_SPEED)
 
 
-def mouse_position_memorization(event):
+def mouse_position_memorization(event) -> None:
     """
     Remembers mouse coordinates
     :param event:
@@ -123,50 +166,166 @@ def process_rotate_tower(mouse: Rectangle.Point, tank: Tank.Tank) -> None:
             angle = pi
         else:
             angle = 0
-    angle_change = 6
-    if abs(angle - tank.tower.rectangle.rotate) >= angle_change * pi / 180:
+    if abs(angle - tank.tower.rectangle.rotate) >= TOWER_TURNING_SPEED:
         if angle > 0:
             if angle - pi <= tank.tower.rectangle.rotate <= angle:
-                Tank.rotate_tower_gun(tank, angle_change * pi / 180)
+                Tank.rotate_tower_gun(tank, TOWER_TURNING_SPEED)
             elif -pi <= tank.tower.rectangle.rotate <= angle - pi or angle < tank.tower.rectangle.rotate < pi:
-                Tank.rotate_tower_gun(tank, -angle_change * pi / 180)
+                Tank.rotate_tower_gun(tank, -TOWER_TURNING_SPEED)
         else:
             if angle <= tank.tower.rectangle.rotate <= angle + pi:
-                Tank.rotate_tower_gun(tank, -angle_change * pi / 180)
+                Tank.rotate_tower_gun(tank, -TOWER_TURNING_SPEED)
             elif -pi <= tank.tower.rectangle.rotate <= angle or angle + pi < tank.tower.rectangle.rotate < pi:
-                Tank.rotate_tower_gun(tank, angle_change * pi / 180)
+                Tank.rotate_tower_gun(tank, TOWER_TURNING_SPEED)
+    else:
+        if angle > 0:
+            if angle - pi <= tank.tower.rectangle.rotate <= angle:
+                Tank.rotate_tower_gun(tank, pi / 360)
+            elif -pi <= tank.tower.rectangle.rotate <= angle - pi or angle < tank.tower.rectangle.rotate < pi:
+                Tank.rotate_tower_gun(tank, -pi / 360)
+        else:
+            if angle <= tank.tower.rectangle.rotate <= angle + pi:
+                Tank.rotate_tower_gun(tank, -pi / 360)
+            elif -pi <= tank.tower.rectangle.rotate <= angle or angle + pi < tank.tower.rectangle.rotate < pi:
+                Tank.rotate_tower_gun(tank, pi / 360)
 
 
 def tanks():
     global arr_tanks, time_for_tanks
     if time_for_tanks + TIME_RESPAWN_TANKS < last_time:
-        if len(arr_target) < MAXIMUM_NUMBER_OF_TANKS:
+        if len(arr_tanks) < MAXIMUM_NUMBER_OF_TANKS:
             flag_of_tanks = False
             new_point = Rectangle.create_point(0, 0)
+            counter = 0
             while flag_of_tanks is False:
+                if counter >= 5:
+                    return
                 new_point.x, new_point.y = \
-                    random.randrange(FIELD_X + BORDER_WIDTH + TARGET_WIDTH, FIELD_X +
-                                     FIELD_WIDTH - BORDER_WIDTH - TARGET_WIDTH), \
-                    random.randrange(FIELD_Y + BORDER_WIDTH + TARGET_HEIGHT, FIELD_Y +
-                                     FIELD_HEIGHT - BORDER_WIDTH - TARGET_HEIGHT)
+                    random.randrange(FIELD_X + BORDER_WIDTH + int(math.hypot(TANK_HEIGHT, TANK_WIDTH) + 1), FIELD_X +
+                                     FIELD_WIDTH - BORDER_WIDTH - int(math.hypot(TANK_HEIGHT, TANK_WIDTH) + 1)), \
+                    random.randrange(FIELD_Y + BORDER_WIDTH + int(math.hypot(TANK_HEIGHT, TANK_WIDTH) + 1), FIELD_Y +
+                                     FIELD_HEIGHT - BORDER_WIDTH - int(math.hypot(TANK_HEIGHT, TANK_WIDTH) + 1))
                 flag_1 = False
-                for i in range(len(arr_target)):
-                    if Rectangle.in_rectangle(arr_target[i].rectangle, new_point,
+                for i in range(len(arr_tanks)):
+                    if Rectangle.in_rectangle(arr_tanks[i].body.rectangle, new_point,
                                               int(math.hypot(TANK_HEIGHT, TANK_WIDTH) + 1)) is True:
                         flag_1 = True
                         break
                 if flag_1 is True:
+                    counter += 1
                     continue
                 if Rectangle.in_rectangle(tank1.body.rectangle, new_point,
                                           int(math.hypot(TANK_HEIGHT, TANK_WIDTH) + 1)) is True:
+                    counter += 1
                     continue
                 flag_of_tanks = True
             arr_tanks.append(
                 Tank.create_tank(new_point.x, new_point.y, TANK_HEIGHT, TANK_WIDTH, COLOR_TANKS, TOWER_TANK_SIZE,
                                  TOWER_TANK_SIZE, COLOR_TANKS_TOWER, GUN_HEIGHT, GUN_WIDTH, COLOR_TANKS_GUN,
                                  START_SPEED_TANK_X, START_SPEED_TANK_Y,
-                                 START_ROTATE_TANKS[random.randint(0, len(START_ROTATE_TANKS) - 1)]))
+                                 START_ROTATE_TANKS[random.randint(0, len(START_ROTATE_TANKS) - 1)], time.time()))
             time_for_tanks = last_time
+
+
+def move_other_tanks(dt) -> None:  # Нужно, чтобы танки двигались не рывками, а плавно(добавить запоминание последнего
+    # движения)
+    global arr_tanks
+    for i in range(len(arr_tanks)):
+        direction = random.choice(['w', 'a', 's', 'd'])
+        factor = random.randint(1, 3)
+        dspeed = 0
+        if direction == 'w':
+            dspeed += factor * TANK_ACCELERATION
+        elif direction == 's':
+            dspeed -= factor * TANK_ACCELERATION
+        elif direction == 'a':
+            Tank.rotate_tank(arr_tanks[i], -(factor * TANK_TURNING_SPEED))
+        elif direction == 'd':
+            Tank.rotate_tank(arr_tanks[i], factor * TANK_TURNING_SPEED)
+        Tank.speed_change(dspeed, arr_tanks[i], MAXIMUM_SPEED)
+        dx_tank = arr_tanks[i].speed.x * dt
+        dy_tank = arr_tanks[i].speed.y * dt
+        Tank.move_tank(arr_tanks[i], Rectangle.create_point(dx_tank, dy_tank))
+        tank_with_field(arr_tanks[i])
+        process_rotate_tower(tank1.body.rectangle.centre, arr_tanks[i])
+        shots(arr_tanks[i], TIME_RESPAWN_BULLET_OTHER_TANK)
+
+
+def contact_bullet_with_other_tanks() -> None:
+    """
+    There was contact between bullets and targets, also between the tank and targets
+    :return:
+    """
+    global arr_bullet, arr_bullet_draw, arr_tanks
+    if len(arr_tanks) > 0:
+        arr_del_bul_1 = []
+        arr_del_tan = []
+        for i in range(len(arr_tanks)):
+            for j in range(len(arr_bullet)):
+                if Rectangle.intersection(arr_tanks[i].body.rectangle, arr_bullet[j].rectangle) is True:
+                    arr_del_bul_1.append(j)
+                    arr_del_tan.append(i)
+                    break
+        for i in range(len(arr_del_tan)):
+            try:
+                canvas.delete(arr_bullet_draw[arr_del_bul_1[len(arr_del_tan) - i - 1]])
+                del arr_bullet_draw[arr_del_bul_1[len(arr_del_tan) - i - 1]]
+                del arr_bullet[arr_del_bul_1[len(arr_del_tan) - i - 1]]
+                del_tank_polygons(arr_tanks[arr_del_tan[len(arr_del_tan) - i - 1]])
+                del arr_tanks[arr_del_tan[len(arr_del_tan) - i - 1]]
+                change_score(score, 1)
+            except IndexError:
+                continue
+
+
+def contact_bullet_with_main_tank():
+    global arr_bullet, arr_bullet_draw, health
+    if len(arr_bullet) > 0:
+        arr_del_bul = []
+        for i in range(len(arr_bullet)):
+            if Rectangle.intersection(tank1.body.rectangle, arr_bullet[i].rectangle) is True:
+                arr_del_bul.append(i)
+                break
+        for i in range(len(arr_del_bul)):
+            canvas.delete(arr_bullet_draw[arr_del_bul[len(arr_del_bul) - i - 1]])
+            del arr_bullet_draw[arr_del_bul[len(arr_del_bul) - i - 1]]
+            del arr_bullet[arr_del_bul[len(arr_del_bul) - i - 1]]
+            health.damage += 1
+            change_health(health)
+
+
+def contact_tank_with_tanks():
+    global arr_tanks  # Сделать соприкосновение бота с ботом
+    # if len(arr_tanks) > 0:
+    #     arr_del_tan = []
+    #     for i in range(len(arr_tanks)):
+    #         for j in range(0, len(arr_tanks) - i, -1):
+    #             if Rectangle.intersection(arr_tanks[i].body.rectangle, arr_tanks[j].body.rectangle) is True:
+    #                 arr_del_tan.append(i)
+    #                 arr_del_tan.append(len(arr_tanks) - j)
+    #                 break
+    #     for i in range(len(arr_del_tan)):
+    #         try:
+    #             del_tank_polygons(arr_tanks[arr_del_tan[len(arr_del_tan) - i - 1]])
+    #             del arr_tanks[arr_del_tan[len(arr_del_tan) - i - 1]]
+    #             change_score(score, 1)
+    #         except IndexError:
+    #             continue
+    if len(arr_tanks) > 0:
+        arr_del_tan = []
+        for i in range(len(arr_tanks)):
+            if Rectangle.intersection(arr_tanks[i].body.rectangle, tank1.body.rectangle) is True:
+                arr_del_tan.append(i)
+                break
+        for i in range(len(arr_del_tan)):
+            try:
+                del_tank_polygons(arr_tanks[arr_del_tan[len(arr_del_tan) - i - 1]])
+                del arr_tanks[arr_del_tan[len(arr_del_tan) - i - 1]]
+                change_score(score, 1)
+                health.damage += 1
+                change_health(health)
+            except IndexError:
+                continue
 
 
 def contact_with_field_boundaries(object_) -> str:
@@ -187,40 +346,7 @@ def contact_with_field_boundaries(object_) -> str:
     return "Not touch"
 
 
-def accommodation_targets() -> None:
-    """
-    Places targets so that they do not touch the tank and other targets
-    :return:
-    """
-    global time_for_target, last_time
-    if time_for_target + TIME_RESPAWN_TARGETS < last_time:
-        if len(arr_target) < MAXIMUM_NUMBER_OF_TARGETS:
-            flag_of_target = False
-            new_point = Rectangle.create_point(0, 0)
-            while flag_of_target is False:
-                new_point.x, new_point.y = \
-                    random.randrange(FIELD_X + BORDER_WIDTH + TARGET_WIDTH, FIELD_X +
-                                     FIELD_WIDTH - BORDER_WIDTH - TARGET_WIDTH), \
-                    random.randrange(FIELD_Y + BORDER_WIDTH + TARGET_HEIGHT, FIELD_Y +
-                                     FIELD_HEIGHT - BORDER_WIDTH - TARGET_HEIGHT)
-                flag_1 = False
-                for i in range(len(arr_target)):
-                    if Rectangle.in_rectangle(arr_target[i].rectangle, new_point, TARGET_WIDTH) is True:
-                        flag_1 = True
-                        break
-                if flag_1 is True:
-                    continue
-                if Rectangle.in_rectangle(tank1.body.rectangle, new_point, TARGET_WIDTH) is True:
-                    continue
-                flag_of_target = True
-            arr_target.append(
-                Bullet_and_target.create_target(new_point.x, new_point.y, TARGET_HEIGHT, TARGET_WIDTH,
-                                                ROTATE_TARGETS, COLOR_TARGET))
-            arr_target_draw.append(draw_target(arr_target[-1]))
-        time_for_target = last_time
-
-
-def bullets_movement(dt) -> None:
+def bullets_movement(dt) -> None:  # Почему-то пропадают те снаряды, которые не должны пропадать
     """
     In addition to the movement of bullets, it checks each bullet for crossing the field boundary
     :param dt:
@@ -253,43 +379,6 @@ def bullets_movement(dt) -> None:
         del arr_bullet_draw[0]
 
 
-def contact_with_target() -> None:
-    """
-    There was contact between bullets and targets, also between the tank and targets
-    :return:
-    """
-    global arr_target, arr_bullet, arr_target_draw, arr_bullet_draw
-    if len(arr_target) > 0:
-        arr_del_bul_1 = []
-        arr_del_tar = []
-        for i in range(len(arr_target)):
-            for j in range(len(arr_bullet)):
-                if Rectangle.intersection(arr_target[i].rectangle, arr_bullet[j].rectangle) is True:
-                    arr_del_bul_1.append(j)
-                    arr_del_tar.append(i)
-                    break
-        for i in range(len(arr_del_tar)):
-            try:
-                canvas.delete(arr_target_draw[arr_del_tar[len(arr_del_tar) - i - 1]])
-                canvas.delete(arr_bullet_draw[arr_del_bul_1[len(arr_del_tar) - i - 1]])
-                del arr_bullet_draw[arr_del_bul_1[len(arr_del_tar) - i - 1]]
-                del arr_bullet[arr_del_bul_1[len(arr_del_tar) - i - 1]]
-                del arr_target_draw[arr_del_tar[len(arr_del_tar) - i - 1]]
-                del arr_target[arr_del_tar[len(arr_del_tar) - i - 1]]
-                change_score(score, 1)
-            except IndexError:
-                continue
-        arr_del_tar = []
-        for m in range(len(arr_target)):
-            if Rectangle.intersection(arr_target[m].rectangle, tank1.body.rectangle) is True:
-                arr_del_tar.append(m)
-        for _ in range(len(arr_del_tar)):
-            canvas.delete(arr_target_draw[arr_del_tar[0]])
-            del arr_target[arr_del_tar[0]]
-            del arr_target_draw[arr_del_tar[0]]
-            change_score(score, 1)
-
-
 def tank_with_field(tank: Tank.Tank) -> None:
     """
     Did the tank go out of the field
@@ -318,6 +407,10 @@ def update_physics():
     :return:
     """
     global last_time, tank1
+    if health.damage == health.number_of_shots:
+        root.quit()
+        return  # Надо вместо закрытия сделать всплывающее окно где будет спрашиваться у пользователя хочет он
+        # перезапустить или нет
     cur_time = time.time()
     if last_time:
         dt = cur_time - last_time
@@ -326,16 +419,19 @@ def update_physics():
         Tank.move_tank(tank1, Rectangle.create_point(dx_tank, dy_tank))
 
         process_rotate_tower(mouse_position, tank1)
+        contact_bullet_with_main_tank()
         bullets_movement(dt)
-        accommodation_targets()
-        contact_with_target()
-        tank_with_field(tank1)
-
         tanks()
+        tank_with_field(tank1)
+        move_other_tanks(dt)
+        contact_bullet_with_other_tanks()
+        contact_tank_with_tanks()
+        draw_tank(tank1)
+
         draw_tank(tank1)
         for i in range(len(arr_tanks)):
             draw_tank(arr_tanks[i])
-# Почему-то рисует только последний танк
+
     last_time = cur_time
     # update physics as frequent as possible
     root.after(16, update_physics)
@@ -348,10 +444,11 @@ pi = math.pi
 SCREEN_WIDTH = root.winfo_screenwidth() - 66
 SCREEN_HEIGHT = root.winfo_screenheight() - 66
 
-TITLE_Y = 20
+TITLE_Y = 20  # 20
 # Field
-FIELD_PADDING = 30
-BORDER_WIDTH = 5
+FIELD_PADDING = 30  # 30
+BORDER_WIDTH = 5  # 5
+
 FIELD_X = FIELD_PADDING
 FIELD_Y = FIELD_PADDING + TITLE_Y
 FIELD_WIDTH = SCREEN_WIDTH - FIELD_X - FIELD_PADDING
@@ -363,58 +460,56 @@ COLOR_TANK = "red"
 COLOR_TOWER_TANK = "#0000FF"
 COLOR_GUN = "blue"
 COLOR_BULLET = "black"
-COLOR_TARGET = "yellow"
-COLOR_TARGET_STRIP = "#FFC0CB"
+COLOR_SCORE = "blue"
+TEXT_COLOR_ON_TOP = "black"
 COLOR_TANKS = "blue"
 COLOR_TANKS_TOWER = "red"
 COLOR_TANKS_GUN = "red"
-COLOR_SCORE = "black"
-TEXT_COLOR_ON_TOP = "black"
+COLOR_HEALTH_BAR = "red"  # yellow
 # Tank
-TANK_WIDTH = 20
-TANK_HEIGHT = 40
-TOWER_TANK_SIZE = 16
-GUN_HEIGHT = 20
-GUN_WIDTH = 6
-TARGET_HEIGHT = 20
-TARGET_WIDTH = 20
-START_ROTATE_TANK = pi / 4
-TOWER_TURNING_SPEED = 3 * pi / 180
-TANK_ACCELERATION = 10
-MAXIMUM_SPEED = 400
+TANK_WIDTH = 20  # 20
+TANK_HEIGHT = 40  # 40
+TOWER_TANK_SIZE = 16  # 16
+GUN_HEIGHT = 20  # 20
+GUN_WIDTH = 6  # 6
+START_ROTATE_TANK = 0  # 0
+TANK_TURNING_SPEED = 5 * pi / 180  # 5 * pi / 180
+TOWER_TURNING_SPEED = 3 * pi / 180  # 3 * pi / 180
+TANK_ACCELERATION = 10  # 10
+MAXIMUM_SPEED = 400  # 400
+NUMBER_OF_SHOTS_TO_DESTROY_THE_MAIN_TANK = 10  # 10
+HEALTH_X = int(SCREEN_WIDTH * 0.9)
+HEALTH_Y = int((TITLE_Y + FIELD_PADDING) * 1.5)
+LENGTH_HEALTH_BAR = 150  # 150
+WIDTH_HEALTH_BAR = 15  # 15
 # Other tanks
-START_SPEED_TANK_X = 0
-START_SPEED_TANK_Y = 0
-TIME_RESPAWN_TANKS = 1
-MAXIMUM_NUMBER_OF_TANKS = 10
+START_SPEED_TANK_X = 0  # 0
+START_SPEED_TANK_Y = 0  # 0
+TIME_RESPAWN_TANKS = 3  # 3
+MAXIMUM_NUMBER_OF_TANKS = 3  # 3
 START_ROTATE_TANKS = [-pi / 2, -pi / 4, 0, pi / 4, pi / 2, pi]
+TIME_RESPAWN_BULLET_OTHER_TANK = 2  # 2
 # Bullet
-MAXIMUM_NUMBER_OF_BULLET = 100
-TIME_RESPAWN_BULLET = 0.33
-BULLET_SPEED = 500
-# Target
-MAXIMUM_NUMBER_OF_TARGETS = 15
-TIME_RESPAWN_TARGETS = 1
-ROTATE_TARGETS = 0
+MAXIMUM_NUMBER_OF_BULLET = 100  # 100
+TIME_RESPAWN_BULLET = 0.33  # 0.33
+BULLET_SPEED = 500  # 500
 # Score
-START_VALUE_SCORE = 0
+START_VALUE_SCORE = 0  # 0
 X_SCORE = int(SCREEN_WIDTH * 0.9)
 Y_SCORE = int((TITLE_Y + FIELD_PADDING) * 0.5)
 FONT_SCORE = "Courier"
-FONT_SIZE_SCORE = int((TITLE_Y + FIELD_PADDING) * 0.5)
+FONT_SIZE_SCORE = int((TITLE_Y + FIELD_PADDING) * 0.45)
 # Text above
 X_TEXT = SCREEN_WIDTH / 2
 Y_TEXT = int((TITLE_Y + FIELD_PADDING) * 0.5)
 FONT_TEXT = FIELD_PADDING
-FONT_SIZE_TEXT = int((TITLE_Y + FIELD_PADDING) * 0.3)
+FONT_SIZE_TEXT = int((TITLE_Y + FIELD_PADDING) * 0.2)
 
 arr_bullet = []
 arr_bullet_draw = []
-arr_target = []
-arr_target_draw = []
 arr_tanks = []
 
-root.title("Tanks")
+root.title("Tank")
 root.resizable(False, False)
 
 canvas = tk.Canvas(root, width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
@@ -431,19 +526,21 @@ border = canvas.create_rectangle(FIELD_X, FIELD_Y,
                                  fill=COLOR_FIELD, outline=COLOR_BORDER, width=2 * BORDER_WIDTH)
 score = create_score(START_VALUE_SCORE, COLOR_SCORE, X_SCORE, Y_SCORE, FONT_SCORE, FONT_SIZE_SCORE)
 tank1 = Tank.create_tank(FIELD_X + FIELD_WIDTH / 2, FIELD_Y + FIELD_HEIGHT / 2, TANK_HEIGHT, TANK_WIDTH, COLOR_TANK,
-                         TOWER_TANK_SIZE, TOWER_TANK_SIZE, COLOR_TOWER_TANK, GUN_HEIGHT, GUN_WIDTH, COLOR_GUN,
-                         START_SPEED_TANK_X, START_SPEED_TANK_Y, START_ROTATE_TANK)
+                         TOWER_TANK_SIZE, TOWER_TANK_SIZE, COLOR_TOWER_TANK, GUN_HEIGHT, GUN_WIDTH, COLOR_GUN, 0, 0,
+                         START_ROTATE_TANK, time.time())
 draw_tank(tank1)
+
+health = create_health_bar(NUMBER_OF_SHOTS_TO_DESTROY_THE_MAIN_TANK, HEALTH_X, HEALTH_Y, LENGTH_HEALTH_BAR,
+                           COLOR_HEALTH_BAR, WIDTH_HEALTH_BAR)
+
 mouse_position = Rectangle.create_point(FIELD_X + FIELD_WIDTH / 2, FIELD_Y + FIELD_HEIGHT / 2)
 last_time = time.time()
-time_for_target = time.time()
-time_for_bullet = time.time()
 time_for_tanks = time.time()
 
 root.bind("<Key>", process_key)
 root.bind("<Button-1>", process_shot)
 root.bind("<Motion>", mouse_position_memorization)
-
+# Button-1 space
 Test_rectangle.tests()
 
 update_physics()
